@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 API_KEY=os.getenv("API_FOOTBALL_KEY","").strip()
 GATEWAY_TOKEN=os.getenv("GATEWAY_TOKEN","").strip()
+CHATGPT_BRIDGE_TOKEN=os.getenv("CHATGPT_BRIDGE_TOKEN","").strip()
 DAILY_LIMIT=int(os.getenv("API_DAILY_LIMIT","90"))
 BASE_URL=os.getenv("API_FOOTBALL_BASE_URL","https://v3.football.api-sports.io").rstrip("/")
 CACHE_TTL=int(os.getenv("CACHE_TTL_SECONDS","900"))
@@ -50,6 +51,74 @@ async def get_api(path,params):
 
 def out(data,cached):
     return {"cached":cached,"usage_today":usage(),"daily_safety_limit":DAILY_LIMIT,"data":data}
+
+
+def bridge_auth(token):
+    if not CHATGPT_BRIDGE_TOKEN:
+        raise HTTPException(500,"CHATGPT_BRIDGE_TOKEN is not configured")
+    if token != CHATGPT_BRIDGE_TOKEN:
+        raise HTTPException(401,"Invalid ChatGPT bridge token")
+
+def bridge_out(data,cached):
+    # Deliberately expose only API-Football response data and cache/quota metadata.
+    # Never expose API_FOOTBALL_KEY or GATEWAY_TOKEN.
+    return out(data,cached)
+
+@app.get("/chat/{bridge_token}/fixtures")
+async def chat_fixtures(
+    bridge_token:str,
+    date:Optional[str]=None,
+    league:Optional[int]=None,
+    season:Optional[int]=None,
+    team:Optional[int]=None,
+    fixture:Optional[int]=None,
+    status:Optional[str]=None,
+):
+    bridge_auth(bridge_token)
+    d,c=await get_api("/fixtures",{"date":date,"league":league,"season":season,"team":team,"id":fixture,"status":status})
+    return bridge_out(d,c)
+
+@app.get("/chat/{bridge_token}/fixtures/{fixture_id}/statistics")
+async def chat_statistics(bridge_token:str,fixture_id:int):
+    bridge_auth(bridge_token)
+    d,c=await get_api("/fixtures/statistics",{"fixture":fixture_id})
+    return bridge_out(d,c)
+
+@app.get("/chat/{bridge_token}/fixtures/{fixture_id}/lineups")
+async def chat_lineups(bridge_token:str,fixture_id:int):
+    bridge_auth(bridge_token)
+    d,c=await get_api("/fixtures/lineups",{"fixture":fixture_id})
+    return bridge_out(d,c)
+
+@app.get("/chat/{bridge_token}/fixtures/{fixture_id}/injuries")
+async def chat_injuries(bridge_token:str,fixture_id:int):
+    bridge_auth(bridge_token)
+    d,c=await get_api("/injuries",{"fixture":fixture_id})
+    return bridge_out(d,c)
+
+@app.get("/chat/{bridge_token}/fixtures/{fixture_id}/predictions")
+async def chat_predictions(bridge_token:str,fixture_id:int):
+    bridge_auth(bridge_token)
+    d,c=await get_api("/predictions",{"fixture":fixture_id})
+    return bridge_out(d,c)
+
+@app.get("/chat/{bridge_token}/fixtures/{fixture_id}/odds")
+async def chat_odds(bridge_token:str,fixture_id:int):
+    bridge_auth(bridge_token)
+    d,c=await get_api("/odds",{"fixture":fixture_id})
+    return bridge_out(d,c)
+
+@app.get("/chat/{bridge_token}/h2h")
+async def chat_h2h(bridge_token:str,h2h:str,last:int=10):
+    bridge_auth(bridge_token)
+    d,c=await get_api("/fixtures/headtohead",{"h2h":h2h,"last":last})
+    return bridge_out(d,c)
+
+@app.get("/chat/{bridge_token}/teams/{team_id}/statistics")
+async def chat_team_stats(bridge_token:str,team_id:int,league:int,season:int):
+    bridge_auth(bridge_token)
+    d,c=await get_api("/teams/statistics",{"team":team_id,"league":league,"season":season})
+    return bridge_out(d,c)
 
 @app.get("/health")
 async def health():
