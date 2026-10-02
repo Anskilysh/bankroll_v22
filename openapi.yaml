@@ -1,0 +1,67 @@
+openapi: 3.1.0
+info:
+  title: Bankroll Engine V2.2 API-Football Gateway
+  version: 1.0.0
+servers:
+  - url: https://YOUR-SERVICE.onrender.com
+components:
+  securitySchemes:
+    GatewayToken:
+      type: apiKey
+      in: header
+      name: X-Gateway-Token
+security:
+  - GatewayToken: []
+paths:
+  /health:
+    get:
+      security: []
+      responses:
+        "200": {description: OK}
+  /api/status:
+    get:
+      responses:
+        "200": {description: Status}
+  /fixtures:
+    get:
+      parameters:
+        - {name: date, in: query, schema: {type: string}}
+        - {name: league, in: query, schema: {type: integer}}
+        - {name: season, in: query, schema: {type: integer}}
+        - {name: team, in: query, schema: {type: integer}}
+        - {name: fixture, in: query, schema: {type: integer}}
+        - {name: status, in: query, schema: {type: string}}
+      responses:
+        "200": {description: Fixtures}
+  /fixtures/{fixture_id}/statistics:
+    get:
+      parameters: [{name: fixture_id, in: path, required: true, schema: {type: integer}}]
+      responses:
+        "200": {description: Statistics}
+  /fixtures/{fixture_id}/lineups:
+    get:
+      parameters: [{name: fixture_id, in: path, required: true, schema: {type: integer}}]
+      responses:
+        "200": {description: Lineups}
+  /fixtures/{fixture_id}/injuries:
+    get:
+      parameters: [{name: fixture_id, in: path, required: true, schema: {type: integer}}]
+      responses:
+        "200": {description: Injuries}
+  /fixtures/{fixture_id}/predictions:
+    get:
+      parameters: [{name: fixture_id, in: path, required: true, schema: {type: integer}}]
+      responses:
+        "200": {description: Predictions}
+  /fixtures/{fixture_id}/odds:
+    get:
+      parameters: [{name: fixture_id, in: path, required: true, schema: {type: integer}}]
+      responses:
+        "200": {description: Odds}
+  /h2h:
+    get:
+      parameters:
+        - {name: h2h, in: query, required: true, schema: {type: string}}
+        - {name: last, in: query, schema: {type: integer, default: 10}}
+      responses:
+        "200": {description: H2H}
