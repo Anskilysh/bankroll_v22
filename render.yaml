@@ -14,6 +14,8 @@ services:
         sync: false
       - key: CHATGPT_BRIDGE_TOKEN
         sync: false
+      - key: CHATGPT_MCP_TOKEN
+        sync: false
       - key: API_DAILY_LIMIT
         value: "90"
       - key: CACHE_TTL_SECONDS
