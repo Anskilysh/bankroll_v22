@@ -3,3 +3,4 @@ uvicorn[standard]>=0.34,<1
 httpx>=0.28,<1
 python-dotenv>=1.0,<2
 mcp>=2.0,<3
+PyJWT[crypto]>=2.9,<3
